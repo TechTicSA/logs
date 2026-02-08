@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechTic | Secure Verification Terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { 
+            --bg-deep: #0a0a12;
+            --bg-surface: #1a1a2e;
+            --bg-card: #16213e;
+            --accent: #e94560;
+            --accent-glow: rgba(233, 69, 96, 0.3);
+            --ai-primary: #00d2ff;
+            --text-main: #e2e8f0;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --radius-lg: 24px;
+            --radius-md: 12px;
+        } 
+
+        * { box-sizing: border-box; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); } 
+
+        body { 
+            margin: 0; 
+            min-height: 100vh; 
+            background-color: var(--bg-deep);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(233, 69, 96, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(0, 210, 255, 0.05) 0%, transparent 20%);
+            font-family: 'Cairo', sans-serif;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 60px 20px;
+        } 
+
+        .terminal-wrapper { 
+            width: 100%;
+            max-width: 1000px; 
+            animation: slideUp 0.6s ease-out;
+        } 
+
+        .brand-header { text-align: center; margin-bottom: 50px; }
+        .brand-logo { height: 60px; filter: drop-shadow(0 0 20px rgba(255,255,255,0.1)); }
+
+        /* --- Search Module --- */
+        .search-module { 
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            margin-bottom: 30px;
+        }
+
+        .header-content h1 { font-size: 32px; margin: 0; font-weight: 700; letter-spacing: -0.5px; }
+        .header-content p { color: var(--text-dim); margin: 10px 0 30px; }
+
+        .input-container {
+            display: flex;
+            gap: 15px;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+        }
+
+        .input-container:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+
+        input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 0 20px;
+            font-size: 18px;
+            outline: none;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+        }
+
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px var(--accent-glow); }
+
+        /* --- Results Panel --- */
+        .results-panel { display: none; animation: fadeIn 0.5s ease; }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding: 0 10px;
+        }
+
+        .ticket-pill {
+            background: var(--bg-card);
+            padding: 8px 20px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--ai-primary);
+        }
+
+        /* --- AI Smart Suggestion --- */
+        .ai-banner {
+            display: none;
+            background: linear-gradient(90deg, rgba(0, 210, 255, 0.1) 0%, rgba(0, 210, 255, 0.02) 100%);
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ai-banner::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            animation: sweep 3s infinite;
+        }
+
+        .ai-badge {
+            background: var(--ai-primary);
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .ai-email {
+            background: rgba(0,0,0,0.3);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* --- Activity Cards --- */
+        .activity-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .activity-card:hover { border-color: rgba(255,255,255,0.2); transform: scale(1.01); }
+
+        .card-meta { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .status-indicator { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+        .email-vault { display: grid; gap: 10px; }
+        .email-item {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: copy;
+            border: 1px solid transparent;
+        }
+        .email-item:hover { background: rgba(0,0,0,0.4); border-color: var(--accent); }
+        .email-item span { font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+
+        .btn-action {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            margin-top: 15px;
+        }
+        .btn-action:hover { color: white; border-color: white; }
+
+        /* --- Utilities --- */
+        #toast {
+            position: fixed; bottom: 30px; right: 30px;
+            background: var(--accent); color: white;
+            padding: 16px 30px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transform: translateY(150%);
+            z-index: 9999;
+        }
+        #toast.show { transform: translateY(0); }
+
+        @keyframes sweep { 0% { left: -100%; } 100% { left: 200%; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .spinner {
+            width: 20px; height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="toast">Copied to Clipboard!</div>
+
+    <div class="terminal-wrapper">
+        <header class="brand-header">
+            <img src="https://techticsa.com/cdn-cgi/image/format=auto,quality=90/wp-content/uploads/2024/03/6c93368d-2048x617.png" alt="TechTic" class="brand-logo">
+        </header>
+
+        <section class="search-module">
+            <div class="header-content">
+                <h1>Verification Terminal</h1>
+                <p>Execute integrity checks on issued certificates and track mail cycles.</p>
+            </div>
+            
+            <div class="input-container">
+                <input type="text" id="ticketInput" placeholder="Enter System Ticket ID...">
+                <button class="btn-primary" onclick="executeSearch()">
+                    <span id="btnLabel">Search</span>
+                    <div id="loader" class="spinner"></div>
+                </button>
+            </div>
+        </section>
+
+        <section class="results-panel" id="resultsPanel">
+            <div class="panel-header">
+                <div class="ticket-pill">ID: <span id="idSpan">---</span></div>
+                <button class="btn-action" style="margin-top:0; border-color: var(--ai-primary); color: var(--ai-primary)" onclick="toggleAI()">
+                    ✧ Toggle AI Recommendations
+                </button>
+            </div>
+
+            <div id="aiBox" class="ai-banner">
+                <span class="ai-badge">AI Intelligence</span>
+                <p style="margin: 5px 0 15px 0; font-size: 14px;">Historical data suggests high response rates from these endpoints:</p>
+                <div style="display: flex; gap: 10px;">
+                    <span class="ai-email">compliance.audit@techtic.sa</span>
+                    <span class="ai-email">nodes.verify@partner.io</span>
+                </div>
+            </div>
+
+            <div id="logStack"></div>
+        </section>
+    </div>
+
+    <script>
+        const mockLogs = [
+            { date: "2026.02.01 | 14:00:22", status: "Verified", color: "#10b981", emails: ["verification@external-audit.com"] },
+            { date: "2026.02.01 | 14:00:22", status: "Pending", color: "#f59e0b", emails: ["verification@external-audit.com"] },
+            { date: "2026.01.28 | 09:12:45", status: "Initiated", color: "#a855f7", emails: ["admin@techtic.sa", "legal@techtic.sa"] }
+        ];
+
+        function executeSearch() {
+            const val = document.getElementById('ticketInput').value;
+            if(!val) return;
+
+            const btnLabel = document.getElementById('btnLabel');
+            const loader = document.getElementById('loader');
+            
+            btnLabel.style.display = 'none';
+            loader.style.display = 'block';
+
+            setTimeout(() => {
+                loader.style.display = 'none';
+                btnLabel.style.display = 'block';
+                document.getElementById('idSpan').innerText = val;
+                document.getElementById('resultsPanel').style.display = 'block';
+                renderData();
+            }, 1200);
+        }
+
+        function renderData() {
+            const stack = document.getElementById('logStack');
+            stack.innerHTML = mockLogs.map(log => `
+                <div class="activity-card">
+                    <div class="card-meta">
+                        <span style="font-family:'JetBrains Mono'; font-size: 12px; color:var(--text-dim)">${log.date}</span>
+                        <div class="status-indicator">
+                            <div class="dot" style="background:${log.color}"></div>
+                            <span style="color:${log.color}">${log.status}</span>
+                        </div>
+                    </div>
+                    <div class="email-vault">
+                        ${log.emails.map(m => `
+                            <div class="email-item" onclick="copyText('${m}')">
+                                <span>${m}</span>
+                                <small style="color:var(--accent); font-weight:bold; font-size:10px">COPY</small>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div style="display:flex; justify-content: flex-end;">
+                        <button class="btn-action" onclick="showToast('Initiating Download...')">Download Attempt</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleAI() {
+            const box = document.getElementById('aiBox');
+            box.style.display = (box.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function copyText(txt) {
+            navigator.clipboard.writeText(txt);
+            showToast("Copied: " + txt);
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>
